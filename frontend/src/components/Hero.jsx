@@ -1,6 +1,9 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const Hero = () => {
+  const navigate = useNavigate();
+
   return (
     <section className="relative">
       {/* Hero content */}
@@ -26,11 +29,14 @@ const Hero = () => {
 
             {/* CTA */}
             <div className="flex flex-col items-center gap-3 mb-12">
-              <button className="px-8 py-3.5 bg-[#2962FF] hover:bg-[#1E53E5] text-white text-[16px] font-semibold rounded-lg transition-all hover:shadow-[0_0_30px_rgba(41,98,255,0.3)] active:scale-[0.98]">
-                Get started for free
+              <button
+                onClick={() => navigate('/chart')}
+                className="px-8 py-3.5 bg-[#2962FF] hover:bg-[#1E53E5] text-white text-[16px] font-semibold rounded-lg transition-all hover:shadow-[0_0_30px_rgba(41,98,255,0.3)] active:scale-[0.98]"
+              >
+                Launch Chart
               </button>
               <p className="text-[13px] text-[#787B86]">
-                $0 forever, no credit card needed
+                Full charting platform with professional tools
               </p>
             </div>
 

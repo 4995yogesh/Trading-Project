@@ -5,6 +5,7 @@ import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import MarketOverview from './components/MarketOverview';
 import Footer from './components/Footer';
+import ChartPage from './components/chart/ChartPage';
 
 const HomePage = () => {
   return (
@@ -25,6 +26,8 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<HomePage />} />
+          <Route path="/chart" element={<ChartPage />} />
+          <Route path="/chart/:symbol" element={<ChartPage />} />
           <Route path="*" element={<HomePage />} />
         </Routes>
       </BrowserRouter>

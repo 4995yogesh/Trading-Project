@@ -1,31 +1,8 @@
 import React from 'react';
-import { tickerData } from '../data/mockData';
-
-const MarketTicker = () => {
-  const doubledTicker = [...tickerData, ...tickerData];
-
-  return (
-    <div className="w-full bg-[#131722] border-b border-[#2A2E39] overflow-hidden">
-      <div className="ticker-scroll flex items-center h-[36px] gap-6 whitespace-nowrap">
-        {doubledTicker.map((item, i) => (
-          <div key={i} className="flex items-center gap-2 text-[12px] shrink-0">
-            <span className="text-[#787B86] font-medium">{item.symbol}</span>
-            <span className="text-[#D1D4DC]">{item.price}</span>
-            <span className={item.isUp ? 'text-[#26A69A]' : 'text-[#EF5350]'}>
-              {item.change}
-            </span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-};
 
 const Hero = () => {
   return (
     <section className="relative">
-      <MarketTicker />
-
       {/* Hero content */}
       <div className="relative bg-[#131722] overflow-hidden">
         {/* Background gradient */}

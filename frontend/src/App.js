@@ -4,10 +4,6 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import MarketOverview from './components/MarketOverview';
-import CommunityIdeas from './components/CommunityIdeas';
-import TopStories from './components/TopStories';
-import FeaturesSection from './components/FeaturesSection';
-import PricingSection from './components/PricingSection';
 import Footer from './components/Footer';
 
 const HomePage = () => {
@@ -17,10 +13,6 @@ const HomePage = () => {
       <div className="pt-[52px]">
         <Hero />
         <MarketOverview />
-        <CommunityIdeas />
-        <TopStories />
-        <FeaturesSection />
-        <PricingSection />
         <Footer />
       </div>
     </div>

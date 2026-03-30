@@ -55,16 +55,6 @@ const Navbar = () => {
             <ChevronDown size={12} />
           </button>
 
-          {/* Sign in */}
-          <button className="hidden sm:block px-3 py-1.5 text-[13px] text-[#D1D4DC] hover:text-white transition-colors">
-            Sign in
-          </button>
-
-          {/* Get started */}
-          <button className="px-4 py-[7px] bg-[#2962FF] hover:bg-[#1E53E5] text-white text-[13px] font-semibold rounded transition-colors">
-            Get started
-          </button>
-
           {/* Mobile menu button */}
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
@@ -105,9 +95,6 @@ const Navbar = () => {
               {item.hasDropdown && <ChevronDown size={16} className="text-[#787B86]" />}
             </button>
           ))}
-          <div className="px-4 py-3 border-t border-[#2A2E39]">
-            <button className="text-[14px] text-[#D1D4DC] hover:text-white">Sign in</button>
-          </div>
         </div>
       )}
     </nav>

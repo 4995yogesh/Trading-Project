@@ -112,19 +112,7 @@ const Footer = () => {
               </div>
               <span className="text-[12px] text-[#787B86]">© {currentYear} TradingView, Inc.</span>
             </div>
-            <div className="flex flex-wrap items-center gap-4">
-              {['Terms of use', 'Privacy policy', 'Cookies policy', 'Disclaimers'].map((link) => (
-                <a key={link} href="#" className="text-[11px] text-[#787B86] hover:text-[#D1D4DC] transition-colors">
-                  {link}
-                </a>
-              ))}
-            </div>
           </div>
-
-          {/* Disclaimer text */}
-          <p className="text-[10px] text-[#787B86] mt-6 leading-relaxed max-w-[900px] opacity-60">
-            The financial products offered by the company carry a high level of risk and can result in the loss of all your funds. You should never invest money that you cannot afford to lose. Please note that this website is not directed at any jurisdiction where the described trading or investments would be considered unlawful. The prices are indicative only and may differ from the actual market prices. The content is not intended as investment advice and should not be construed as such.
-          </p>
         </div>
       </div>
     </footer>

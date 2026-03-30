@@ -1,77 +1,172 @@
 import React, { useState } from 'react';
 import {
-  Crosshair, TrendingUp, Minus, ArrowDown, GitBranch, Triangle,
-  Square, Type, Ruler, ZoomIn, Magnet, Pencil, Circle, Hash,
-  ArrowUpRight, Waves, PenTool, MousePointer, Move, Eraser, Trash2
+  MousePointer, Crosshair, TrendingUp, Minus, ArrowUpRight,
+  GitBranch, Triangle, Square, Type, Ruler, ZoomIn, Magnet,
+  Pencil, Circle, Hash, Waves, PenTool, Move, Eraser, Trash2,
+  Eye, Lock, List, MoreHorizontal, ArrowDown
 } from 'lucide-react';
 
-const tools = [
-  { id: 'cursor', icon: MousePointer, label: 'Cursor', group: 'pointer' },
-  { id: 'crosshair', icon: Crosshair, label: 'Crosshair', group: 'pointer' },
-  { id: 'separator-1', type: 'separator' },
-  { id: 'trendline', icon: TrendingUp, label: 'Trend Line', group: 'line' },
-  { id: 'ray', icon: ArrowUpRight, label: 'Ray', group: 'line' },
-  { id: 'horizontal', icon: Minus, label: 'Horizontal Line', group: 'line' },
-  { id: 'vertical', icon: ArrowDown, label: 'Vertical Line', group: 'line' },
-  { id: 'separator-2', type: 'separator' },
-  { id: 'channel', icon: GitBranch, label: 'Parallel Channel', group: 'channel' },
-  { id: 'fibonacci', icon: Waves, label: 'Fibonacci Retracement', group: 'fib' },
-  { id: 'separator-3', type: 'separator' },
-  { id: 'rectangle', icon: Square, label: 'Rectangle', group: 'shape' },
-  { id: 'triangle', icon: Triangle, label: 'Triangle', group: 'shape' },
-  { id: 'circle', icon: Circle, label: 'Circle', group: 'shape' },
-  { id: 'separator-4', type: 'separator' },
-  { id: 'path', icon: PenTool, label: 'Path', group: 'draw' },
-  { id: 'brush', icon: Pencil, label: 'Brush', group: 'draw' },
-  { id: 'text', icon: Type, label: 'Text', group: 'annotation' },
-  { id: 'price-label', icon: Hash, label: 'Price Label', group: 'annotation' },
-  { id: 'separator-5', type: 'separator' },
-  { id: 'measure', icon: Ruler, label: 'Measure', group: 'measure' },
-  { id: 'zoom', icon: ZoomIn, label: 'Zoom In', group: 'zoom' },
-  { id: 'separator-6', type: 'separator' },
-  { id: 'magnet', icon: Magnet, label: 'Magnet Mode', group: 'toggle' },
-  { id: 'move', icon: Move, label: 'Stay in Drawing Mode', group: 'toggle' },
-  { id: 'separator-7', type: 'separator' },
-  { id: 'eraser', icon: Eraser, label: 'Eraser', group: 'delete' },
-  { id: 'delete-all', icon: Trash2, label: 'Remove All Drawings', group: 'delete' },
+// Left toolbar tools matching TradingView's exact order
+const toolGroups = [
+  {
+    id: 'pointer-group',
+    tools: [
+      { id: 'cursor', icon: MousePointer, label: 'Cursor' },
+    ],
+  },
+  {
+    id: 'line-group',
+    tools: [
+      { id: 'trendline', icon: TrendingUp, label: 'Trend Line' },
+    ],
+  },
+  {
+    id: 'hline-group',
+    tools: [
+      { id: 'horizontal', icon: Minus, label: 'Horizontal Line' },
+    ],
+  },
+  {
+    id: 'fib-group',
+    tools: [
+      { id: 'fibonacci', icon: Waves, label: 'Fib Retracement' },
+    ],
+  },
+  {
+    id: 'brush-group',
+    tools: [
+      { id: 'brush', icon: Pencil, label: 'Brush' },
+    ],
+  },
+  {
+    id: 'text-group',
+    tools: [
+      { id: 'text', icon: Type, label: 'Text' },
+    ],
+  },
+  {
+    id: 'shape-group',
+    tools: [
+      { id: 'rectangle', icon: Square, label: 'Rectangle' },
+    ],
+  },
+  {
+    id: 'pattern-group',
+    tools: [
+      { id: 'triangle', icon: Triangle, label: 'Triangle Pattern' },
+    ],
+  },
+  {
+    id: 'arrow-group',
+    tools: [
+      { id: 'arrow', icon: ArrowUpRight, label: 'Arrow' },
+    ],
+  },
+  {
+    id: 'channel-group',
+    tools: [
+      { id: 'channel', icon: GitBranch, label: 'Pitchfork' },
+    ],
+  },
+  {
+    id: 'measure-group',
+    tools: [
+      { id: 'measure', icon: Ruler, label: 'Measure' },
+    ],
+  },
+  {
+    id: 'zoom-group',
+    tools: [
+      { id: 'zoom', icon: ZoomIn, label: 'Zoom In' },
+    ],
+  },
+  {
+    id: 'magnet-group',
+    tools: [
+      { id: 'magnet', icon: Magnet, label: 'Magnet Mode' },
+    ],
+  },
+  {
+    id: 'drawmode-group',
+    tools: [
+      { id: 'drawmode', icon: Move, label: 'Stay in Drawing Mode' },
+    ],
+  },
+  {
+    id: 'visibility-group',
+    tools: [
+      { id: 'visibility', icon: Eye, label: 'Hide All Drawing Tools' },
+    ],
+  },
+  {
+    id: 'lock-group',
+    tools: [
+      { id: 'lock', icon: Lock, label: 'Lock All Drawing Tools' },
+    ],
+  },
+  {
+    id: 'object-group',
+    tools: [
+      { id: 'objecttree', icon: List, label: 'Object Tree' },
+    ],
+  },
+  {
+    id: 'delete-group',
+    tools: [
+      { id: 'delete-all', icon: Trash2, label: 'Remove Drawings' },
+    ],
+  },
 ];
 
 const DrawingTools = ({ activeTool, onToolSelect }) => {
   const [hoveredTool, setHoveredTool] = useState(null);
 
   return (
-    <div className="w-[46px] bg-[#131722] border-r border-[#2A2E39] flex flex-col items-center py-2 gap-0.5 overflow-y-auto scrollbar-hide">
-      {tools.map((tool) => {
-        if (tool.type === 'separator') {
-          return <div key={tool.id} className="w-6 h-px bg-[#2A2E39] my-1" />;
-        }
-
+    <div className="w-[48px] bg-[#131722] border-r border-[#2A2E39] flex flex-col items-center pt-1 pb-1 gap-[1px] overflow-y-auto scrollbar-hide shrink-0">
+      {toolGroups.map((group, gIdx) => {
+        const tool = group.tools[0];
         const Icon = tool.icon;
         const isActive = activeTool === tool.id;
         const isHovered = hoveredTool === tool.id;
 
+        // Add separator before measure, magnet, visibility, and delete groups
+        const showSeparatorBefore = ['measure-group', 'magnet-group', 'visibility-group', 'delete-group'].includes(group.id);
+
         return (
-          <div key={tool.id} className="relative">
-            <button
-              onClick={() => onToolSelect(tool.id)}
-              onMouseEnter={() => setHoveredTool(tool.id)}
-              onMouseLeave={() => setHoveredTool(null)}
-              className={`w-[34px] h-[34px] flex items-center justify-center rounded transition-colors ${
-                isActive
-                  ? 'bg-[#2962FF20] text-[#2962FF]'
-                  : 'text-[#787B86] hover:text-[#D1D4DC] hover:bg-[#1E222D]'
-              }`}
-            >
-              <Icon size={16} strokeWidth={1.5} />
-            </button>
-            {/* Tooltip */}
-            {isHovered && (
-              <div className="absolute left-[46px] top-1/2 -translate-y-1/2 z-50 px-2.5 py-1.5 bg-[#363A45] text-white text-[11px] rounded shadow-lg whitespace-nowrap pointer-events-none">
-                {tool.label}
-                <div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-[#363A45]" />
-              </div>
+          <React.Fragment key={group.id}>
+            {showSeparatorBefore && (
+              <div className="w-7 h-px bg-[#2A2E39] my-[3px]" />
             )}
-          </div>
+            <div className="relative">
+              <button
+                onClick={() => onToolSelect(tool.id)}
+                onMouseEnter={() => setHoveredTool(tool.id)}
+                onMouseLeave={() => setHoveredTool(null)}
+                className={`w-[38px] h-[38px] flex items-center justify-center rounded-[4px] transition-colors relative ${
+                  isActive
+                    ? 'bg-[#2962FF15] text-[#2962FF]'
+                    : 'text-[#787B86] hover:text-[#D1D4DC] hover:bg-[#2A2E3950]'
+                }`}
+              >
+                <Icon size={18} strokeWidth={1.5} />
+                {/* Small triangle indicator for expandable tools */}
+                {['trendline', 'horizontal', 'fibonacci', 'rectangle', 'triangle', 'channel'].includes(tool.id) && (
+                  <div className="absolute bottom-[3px] right-[3px]">
+                    <svg width="4" height="4" viewBox="0 0 4 4">
+                      <path d="M0 0L4 4H0V0Z" fill={isActive ? '#2962FF' : '#787B86'} opacity="0.6" />
+                    </svg>
+                  </div>
+                )}
+              </button>
+              {/* Tooltip */}
+              {isHovered && (
+                <div className="absolute left-[50px] top-1/2 -translate-y-1/2 z-[100] px-2 py-1.5 bg-[#363A45] text-[#D1D4DC] text-[11px] rounded shadow-xl whitespace-nowrap pointer-events-none border border-[#4A4E59]">
+                  {tool.label}
+                  <div className="absolute right-full top-1/2 -translate-y-1/2 border-[5px] border-transparent border-r-[#363A45]" />
+                </div>
+              )}
+            </div>
+          </React.Fragment>
         );
       })}
     </div>

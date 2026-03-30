@@ -284,7 +284,6 @@ const tabs = [
   { id: 'futures', label: 'Futures', component: FuturesTab },
   { id: 'forex', label: 'Forex', component: ForexTab },
   { id: 'economy', label: 'Economy', component: EconomyTab },
-  { id: 'brokers', label: 'Brokers', component: BrokersTab },
 ];
 
 const MarketOverview = () => {

@@ -1,0 +1,134 @@
+import React from 'react';
+import { footerLinks } from '../data/mockData';
+
+const Footer = () => {
+  const currentYear = new Date().getFullYear();
+
+  return (
+    <footer className="bg-[#0C0E15] border-t border-[#2A2E39]">
+      <div className="max-w-[1200px] mx-auto px-4 py-12">
+        {/* Top section */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
+          <div>
+            <h4 className="text-[13px] font-semibold text-white mb-4">Products</h4>
+            <ul className="space-y-2.5">
+              {footerLinks.products.map((link) => (
+                <li key={link}>
+                  <a href="#" className="text-[12px] text-[#787B86] hover:text-[#D1D4DC] transition-colors">
+                    {link}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div>
+            <h4 className="text-[13px] font-semibold text-white mb-4">Company</h4>
+            <ul className="space-y-2.5">
+              {footerLinks.company.map((link) => (
+                <li key={link}>
+                  <a href="#" className="text-[12px] text-[#787B86] hover:text-[#D1D4DC] transition-colors">
+                    {link}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div>
+            <h4 className="text-[13px] font-semibold text-white mb-4">Community</h4>
+            <ul className="space-y-2.5">
+              {footerLinks.community.map((link) => (
+                <li key={link}>
+                  <a href="#" className="text-[12px] text-[#787B86] hover:text-[#D1D4DC] transition-colors">
+                    {link}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div>
+            <h4 className="text-[13px] font-semibold text-white mb-4">For business</h4>
+            <ul className="space-y-2.5">
+              {footerLinks.forBusiness.map((link) => (
+                <li key={link}>
+                  <a href="#" className="text-[12px] text-[#787B86] hover:text-[#D1D4DC] transition-colors">
+                    {link}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
+        {/* Social links */}
+        <div className="flex items-center gap-4 mb-8">
+          {['Twitter', 'YouTube', 'Instagram', 'Telegram', 'TikTok', 'Reddit', 'Discord', 'LinkedIn'].map((social) => (
+            <a
+              key={social}
+              href="#"
+              className="text-[#787B86] hover:text-[#D1D4DC] transition-colors"
+            >
+              <div className="w-8 h-8 rounded-full bg-[#1E222D] hover:bg-[#2A2E39] flex items-center justify-center transition-colors">
+                <span className="text-[9px] font-bold">{social.slice(0, 2)}</span>
+              </div>
+            </a>
+          ))}
+        </div>
+
+        {/* App store badges */}
+        <div className="flex items-center gap-3 mb-8">
+          <button className="flex items-center gap-2 bg-[#1E222D] hover:bg-[#2A2E39] rounded-lg px-4 py-2 transition-colors">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="#787B86">
+              <path d="M12.2 8.5c0-2.4 2-3.6 2.1-3.6-1.1-1.7-2.9-1.9-3.5-1.9-1.5-.2-2.9.9-3.7.9-.8 0-2-.9-3.3-.8C2.2 3.1.7 4.2.7 6.9c0 4 2.9 7.3 5.2 7.3 1.2 0 2.2-.8 3.1-.8.9 0 1.7.8 3 .8s2.9-2.3 3.5-3.5c-2.3-1.1-2.3-3.2-2.3-3.2z" />
+            </svg>
+            <div className="text-left">
+              <div className="text-[8px] text-[#787B86]">Download on the</div>
+              <div className="text-[11px] text-[#D1D4DC] font-medium">App Store</div>
+            </div>
+          </button>
+          <button className="flex items-center gap-2 bg-[#1E222D] hover:bg-[#2A2E39] rounded-lg px-4 py-2 transition-colors">
+            <svg width="14" height="16" viewBox="0 0 14 16" fill="#787B86">
+              <path d="M0 .5v15l7-7.5L0 .5zm8.5 6.5L2.5 0h.5l7 3.5-1.5 3.5zm0 2L2.5 16h.5l7-3.5L8.5 9zm2-1l3 1.5-3 1.5V8z" />
+            </svg>
+            <div className="text-left">
+              <div className="text-[8px] text-[#787B86]">GET IT ON</div>
+              <div className="text-[11px] text-[#D1D4DC] font-medium">Google Play</div>
+            </div>
+          </button>
+        </div>
+
+        {/* Divider */}
+        <div className="border-t border-[#2A2E39] pt-6">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                <svg width="24" height="14" viewBox="0 0 36 20" fill="none">
+                  <path d="M14 0L14 6L20 6L20 0L14 0Z" fill="#2962FF" />
+                  <path d="M14 7L14 20L20 20L20 7L14 7Z" fill="#2962FF" />
+                  <path d="M21 4L21 20L27 20L27 4L21 4Z" fill="#2962FF" />
+                  <path d="M28 0L28 20L34 20L34 0L28 0Z" fill="#2962FF" />
+                  <path d="M0 10L0 20L6 20L6 10L0 10Z" fill="#2962FF" />
+                  <path d="M7 6L7 20L13 20L13 6L7 6Z" fill="#2962FF" />
+                </svg>
+              </div>
+              <span className="text-[12px] text-[#787B86]">© {currentYear} TradingView, Inc.</span>
+            </div>
+            <div className="flex flex-wrap items-center gap-4">
+              {['Terms of use', 'Privacy policy', 'Cookies policy', 'Disclaimers'].map((link) => (
+                <a key={link} href="#" className="text-[11px] text-[#787B86] hover:text-[#D1D4DC] transition-colors">
+                  {link}
+                </a>
+              ))}
+            </div>
+          </div>
+
+          {/* Disclaimer text */}
+          <p className="text-[10px] text-[#787B86] mt-6 leading-relaxed max-w-[900px] opacity-60">
+            The financial products offered by the company carry a high level of risk and can result in the loss of all your funds. You should never invest money that you cannot afford to lose. Please note that this website is not directed at any jurisdiction where the described trading or investments would be considered unlawful. The prices are indicative only and may differ from the actual market prices. The content is not intended as investment advice and should not be construed as such.
+          </p>
+        </div>
+      </div>
+    </footer>
+  );
+};
+
+export default Footer;

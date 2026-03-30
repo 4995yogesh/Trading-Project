@@ -118,7 +118,7 @@ const toolGroups = [
   },
 ];
 
-const DrawingTools = ({ activeTool, onToolSelect }) => {
+const DrawingTools = ({ activeTool, onToolSelect, drawingsVisible, drawingsLocked }) => {
   const [hoveredTool, setHoveredTool] = useState(null);
 
   return (
@@ -126,7 +126,10 @@ const DrawingTools = ({ activeTool, onToolSelect }) => {
       {toolGroups.map((group, gIdx) => {
         const tool = group.tools[0];
         const Icon = tool.icon;
-        const isActive = activeTool === tool.id;
+        let isActive = activeTool === tool.id;
+        // For toggles, show active based on state
+        if (tool.id === 'visibility') isActive = !drawingsVisible;
+        if (tool.id === 'lock') isActive = drawingsLocked;
         const isHovered = hoveredTool === tool.id;
 
         // Add separator before measure, magnet, visibility, and delete groups

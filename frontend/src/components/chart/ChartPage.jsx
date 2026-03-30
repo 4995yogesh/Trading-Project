@@ -1,9 +1,10 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { ArrowLeft, PanelRightOpen, PanelRightClose, List, Clock, ChevronDown, Plus, MoreHorizontal, Grid3X3, Pencil, ExternalLink } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import ChartWidget from './ChartWidget';
 import ChartToolbar from './ChartToolbar';
 import DrawingTools from './DrawingTools';
+import DrawingOverlay from './DrawingOverlay';
 import { symbolInfo } from '../../data/chartData';
 
 const watchlistItems = [
@@ -27,6 +28,7 @@ const rightSideIcons = [
 
 const ChartPage = () => {
   const navigate = useNavigate();
+  const chartWidgetRef = useRef(null);
   const [symbol, setSymbol] = useState('AAPL');
   const [timeframe, setTimeframe] = useState('1d');
   const [chartType, setChartType] = useState('candle');
@@ -35,6 +37,9 @@ const ChartPage = () => {
   const [showRightPanel, setShowRightPanel] = useState(true);
   const [rightTab, setRightTab] = useState('watchlist');
   const [priceData, setPriceData] = useState(null);
+  const [drawings, setDrawings] = useState([]);
+  const [drawingsVisible, setDrawingsVisible] = useState(true);
+  const [drawingsLocked, setDrawingsLocked] = useState(false);
 
   const handlePriceUpdate = useCallback((data) => {
     setPriceData(data);
@@ -44,6 +49,27 @@ const ChartPage = () => {
     setActiveIndicators(prev =>
       prev.includes(name) ? prev.filter(i => i !== name) : [...prev, name]
     );
+  }, []);
+
+  const handleToolSelect = useCallback((toolId) => {
+    if (toolId === 'delete-all') {
+      setDrawings([]);
+      return;
+    }
+    if (toolId === 'eraser') {
+      // Remove last drawing
+      setDrawings(prev => prev.slice(0, -1));
+      return;
+    }
+    if (toolId === 'visibility') {
+      setDrawingsVisible(prev => !prev);
+      return;
+    }
+    if (toolId === 'lock') {
+      setDrawingsLocked(prev => !prev);
+      return;
+    }
+    setActiveTool(toolId);
   }, []);
 
   const info = symbolInfo[symbol] || { name: symbol, exchange: '' };
@@ -66,16 +92,25 @@ const ChartPage = () => {
       {/* Main content area */}
       <div className="flex flex-1 overflow-hidden">
         {/* Left drawing tools */}
-        <DrawingTools activeTool={activeTool} onToolSelect={setActiveTool} />
+        <DrawingTools activeTool={activeTool} onToolSelect={handleToolSelect} drawingsVisible={drawingsVisible} drawingsLocked={drawingsLocked} />
 
         {/* Chart area */}
         <div className="flex-1 relative min-w-0">
           <ChartWidget
+            ref={chartWidgetRef}
             symbol={symbol}
             timeframe={timeframe}
             chartType={chartType}
             activeIndicators={activeIndicators}
             onPriceUpdate={handlePriceUpdate}
+          />
+          <DrawingOverlay
+            chartRef={chartWidgetRef}
+            activeTool={activeTool}
+            drawings={drawings}
+            setDrawings={setDrawings}
+            drawingsVisible={drawingsVisible}
+            drawingsLocked={drawingsLocked}
           />
         </div>
 

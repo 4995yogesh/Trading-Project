@@ -27,7 +27,12 @@ const rightSideIcons = [
   { id: 'details', icon: Clock, label: 'Symbol Info' },
 ];
 
-const multiLayoutSymbols = ['AAPL', 'TSLA', 'BTCUSD', 'EURUSD'];
+const defaultPanes = [
+  { symbol: 'AAPL', timeframe: '1d', chartType: 'candle' },
+  { symbol: 'TSLA', timeframe: '1d', chartType: 'candle' },
+  { symbol: 'BTCUSD', timeframe: '1d', chartType: 'candle' },
+  { symbol: 'EURUSD', timeframe: '1d', chartType: 'candle' },
+];
 
 const ChartPage = () => {
   const navigate = useNavigate();
@@ -35,6 +40,8 @@ const ChartPage = () => {
   const [symbol, setSymbol] = useState('AAPL');
   const [timeframe, setTimeframe] = useState('1d');
   const [chartType, setChartType] = useState('candle');
+  const [panes, setPanes] = useState(defaultPanes);
+  const [activePaneIdx, setActivePaneIdx] = useState(0);
   const [activeIndicators, setActiveIndicators] = useState([]);
   const [activeTool, setActiveTool] = useState('cursor');
   const [showRightPanel, setShowRightPanel] = useState(true);
@@ -183,17 +190,61 @@ const ChartPage = () => {
 
   const info = symbolInfo[symbol] || { name: symbol, exchange: '' };
 
-  // Multi-layout rendering
-  const renderChart = (sym, idx) => {
+  // Sync pane 0 with main symbol/timeframe/chartType
+  const updatePane = useCallback((idx, key, value) => {
+    setPanes(prev => prev.map((p, i) => i === idx ? { ...p, [key]: value } : p));
+    // Also sync main state if pane 0
+    if (idx === 0) {
+      if (key === 'symbol') setSymbol(value);
+      if (key === 'timeframe') setTimeframe(value);
+      if (key === 'chartType') setChartType(value);
+    }
+  }, []);
+
+  // Keep pane 0 in sync with top toolbar changes
+  useEffect(() => {
+    setPanes(prev => prev.map((p, i) => i === 0 ? { ...p, symbol, timeframe, chartType } : p));
+  }, [symbol, timeframe, chartType]);
+
+  // Mini toolbar for secondary panes
+  const PaneMiniToolbar = ({ pane, idx }) => {
+    const [showTf, setShowTf] = useState(false);
+    const tfLabels = { '1m': '1m', '5m': '5m', '15m': '15m', '30m': '30m', '1h': '1H', '4h': '4H', '1d': '1D', '1w': '1W', '1M': '1M' };
+    return (
+      <div className="absolute top-0 left-0 right-0 z-20 flex items-center gap-1 px-2 py-1 bg-[#131722E0] border-b border-[#2A2E39]" onClick={e => e.stopPropagation()}>
+        <span className="text-[11px] font-semibold text-white">{pane.symbol}</span>
+        <div className="relative">
+          <button onClick={() => setShowTf(!showTf)} className="text-[10px] text-[#787B86] hover:text-white bg-[#2A2E39] px-1.5 py-0.5 rounded transition-colors">
+            {tfLabels[pane.timeframe] || '1D'}
+          </button>
+          {showTf && (
+            <div className="absolute top-full left-0 mt-1 bg-[#1E222D] border border-[#363A45] rounded shadow-xl z-50 py-1 w-[60px]">
+              {Object.entries(tfLabels).map(([val, lbl]) => (
+                <button key={val} onClick={() => { updatePane(idx, 'timeframe', val); setShowTf(false); }}
+                  className={`w-full px-2 py-1 text-[10px] text-left hover:bg-[#2A2E39] ${pane.timeframe === val ? 'text-[#2962FF]' : 'text-[#D1D4DC]'}`}>
+                  {lbl}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  // Multi-layout rendering with independent pane state
+  const renderChart = (idx) => {
+    const pane = panes[idx] || panes[0];
     const isMain = idx === 0;
     const cRef = isMain ? chartWidgetRef : null;
     return (
-      <div key={`${sym}-${idx}`} className="flex-1 relative min-w-0 min-h-0 border border-[#2A2E39]">
+      <div key={`pane-${idx}-${pane.symbol}`} className={`flex-1 relative min-w-0 min-h-0 border border-[#2A2E39] ${activePaneIdx === idx && activeLayout !== '1' ? 'ring-1 ring-[#2962FF40]' : ''}`}
+        onClick={() => setActivePaneIdx(idx)}>
         <ChartWidget
           ref={cRef}
-          symbol={sym}
-          timeframe={timeframe}
-          chartType={chartType}
+          symbol={pane.symbol}
+          timeframe={pane.timeframe}
+          chartType={isMain ? chartType : pane.chartType}
           activeIndicators={activeIndicators}
           onPriceUpdate={isMain ? handlePriceUpdate : undefined}
           logScale={logScale}
@@ -209,11 +260,9 @@ const ChartPage = () => {
             drawingsLocked={drawingsLocked}
           />
         )}
-        {/* Symbol label for multi-layout */}
-        {activeLayout !== '1' && (
-          <div className="absolute top-2 left-2 z-10 px-2 py-1 bg-[#131722CC] rounded text-[11px] text-[#787B86] font-medium">
-            {sym}
-          </div>
+        {/* Mini toolbar for non-primary panes in multi-layout */}
+        {activeLayout !== '1' && idx > 0 && (
+          <PaneMiniToolbar pane={pane} idx={idx} />
         )}
       </div>
     );
@@ -223,34 +272,34 @@ const ChartPage = () => {
     switch (activeLayout) {
       case '2h': return (
         <div className="flex flex-1 overflow-hidden">
-          {renderChart(symbol, 0)}
-          {renderChart(multiLayoutSymbols[1] || 'TSLA', 1)}
+          {renderChart(0)}
+          {renderChart(1)}
         </div>
       );
       case '2v': return (
         <div className="flex flex-col flex-1 overflow-hidden">
-          {renderChart(symbol, 0)}
-          {renderChart(multiLayoutSymbols[1] || 'TSLA', 1)}
+          {renderChart(0)}
+          {renderChart(1)}
         </div>
       );
       case '4': return (
         <div className="flex flex-col flex-1 overflow-hidden">
           <div className="flex flex-1 min-h-0">
-            {renderChart(symbol, 0)}
-            {renderChart(multiLayoutSymbols[1] || 'TSLA', 1)}
+            {renderChart(0)}
+            {renderChart(1)}
           </div>
           <div className="flex flex-1 min-h-0">
-            {renderChart(multiLayoutSymbols[2] || 'BTCUSD', 2)}
-            {renderChart(multiLayoutSymbols[3] || 'EURUSD', 3)}
+            {renderChart(2)}
+            {renderChart(3)}
           </div>
         </div>
       );
       case '3r': return (
         <div className="flex flex-1 overflow-hidden">
-          <div className="flex-[2] min-w-0">{renderChart(symbol, 0)}</div>
+          <div className="flex-[2] min-w-0">{renderChart(0)}</div>
           <div className="flex-1 flex flex-col min-w-0">
-            {renderChart(multiLayoutSymbols[1] || 'TSLA', 1)}
-            {renderChart(multiLayoutSymbols[2] || 'BTCUSD', 2)}
+            {renderChart(1)}
+            {renderChart(2)}
           </div>
         </div>
       );

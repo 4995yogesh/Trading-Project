@@ -85,6 +85,10 @@ const ChartWidget = forwardRef(({ symbol, timeframe, chartType, activeIndicators
     let mainSeries;
     const upColor = chartSettings?.upColor || '#26A69A';
     const downColor = chartSettings?.downColor || '#EF5350';
+    const borderUp = chartSettings?.borderUpColor || upColor;
+    const borderDown = chartSettings?.borderDownColor || downColor;
+    const wickUp = chartSettings?.wickUpColor || upColor;
+    const wickDown = chartSettings?.wickDownColor || downColor;
 
     if (chartType === 'line') {
       mainSeries = chart.addSeries(LineSeries, { color: '#2962FF', lineWidth: 2, crosshairMarkerVisible: true, crosshairMarkerRadius: 4 });
@@ -95,8 +99,18 @@ const ChartWidget = forwardRef(({ symbol, timeframe, chartType, activeIndicators
     } else if (chartType === 'bar') {
       mainSeries = chart.addSeries(BarSeries, { upColor, downColor });
       mainSeries.setData(chartData.candleData);
+    } else if (chartType === 'hollow') {
+      // Hollow candles: up candles transparent body, down candles filled
+      mainSeries = chart.addSeries(CandlestickSeries, {
+        upColor: 'transparent', downColor, borderUpColor: borderUp, borderDownColor: borderDown,
+        wickUpColor: wickUp, wickDownColor: wickDown,
+      });
+      mainSeries.setData(chartData.candleData);
     } else {
-      mainSeries = chart.addSeries(CandlestickSeries, { upColor, downColor, borderUpColor: upColor, borderDownColor: downColor, wickUpColor: upColor, wickDownColor: downColor });
+      mainSeries = chart.addSeries(CandlestickSeries, {
+        upColor, downColor, borderUpColor: borderUp, borderDownColor: borderDown,
+        wickUpColor: wickUp, wickDownColor: wickDown,
+      });
       mainSeries.setData(chartData.candleData);
     }
     seriesRef.current = mainSeries;

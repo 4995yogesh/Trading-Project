@@ -44,6 +44,16 @@ const BarIcon = ({ size = 16, className = '' }) => (
   </svg>
 );
 
+// Hollow candle icon
+const HollowCandleIcon = ({ size = 16, className = '' }) => (
+  <svg width={size} height={size} viewBox="0 0 16 16" className={className} fill="none" stroke="currentColor" strokeWidth="1.2">
+    <line x1="4" y1="2" x2="4" y2="14" />
+    <rect x="2" y="5" width="4" height="5" rx="0.5" />
+    <line x1="12" y1="1" x2="12" y2="15" />
+    <rect x="10" y="4" width="4" height="6" rx="0.5" fill="currentColor" opacity="0.4" />
+  </svg>
+);
+
 // Heikin Ashi icon
 const HeikinAshiIcon = ({ size = 16, className = '' }) => (
   <svg width={size} height={size} viewBox="0 0 16 16" className={className} fill="none" stroke="currentColor" strokeWidth="1.2">
@@ -97,6 +107,7 @@ const ChartToolbar = ({
   const chartTypes = [
     { id: 'bar', label: 'Bars', icon: BarIcon },
     { id: 'candle', label: 'Candles', icon: CandleIcon },
+    { id: 'hollow', label: 'Hollow Candles', icon: HollowCandleIcon },
     { id: 'line', label: 'Line', icon: LineIcon },
     { id: 'area', label: 'Area', icon: AreaIcon },
     { id: 'heikinashi', label: 'Heikin Ashi', icon: HeikinAshiIcon },

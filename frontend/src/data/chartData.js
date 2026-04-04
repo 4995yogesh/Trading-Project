@@ -1,66 +1,87 @@
-// Generate realistic OHLCV candlestick data
+// Generate realistic OHLCV candlestick data with timeframe support
 
-function generateCandlestickData(symbol = 'AAPL', days = 300) {
+const SYMBOL_CONFIG = {
+  'AAPL': { basePrice: 180, volatility: 2.5, name: 'Apple Inc', exchange: 'NASDAQ', type: 'Stock', currency: 'USD' },
+  'MSFT': { basePrice: 380, volatility: 4, name: 'Microsoft Corp', exchange: 'NASDAQ', type: 'Stock', currency: 'USD' },
+  'GOOGL': { basePrice: 165, volatility: 3, name: 'Alphabet Inc', exchange: 'NASDAQ', type: 'Stock', currency: 'USD' },
+  'AMZN': { basePrice: 195, volatility: 3.5, name: 'Amazon.com Inc', exchange: 'NASDAQ', type: 'Stock', currency: 'USD' },
+  'TSLA': { basePrice: 250, volatility: 8, name: 'Tesla Inc', exchange: 'NASDAQ', type: 'Stock', currency: 'USD' },
+  'NVDA': { basePrice: 110, volatility: 5, name: 'NVIDIA Corp', exchange: 'NASDAQ', type: 'Stock', currency: 'USD' },
+  'META': { basePrice: 590, volatility: 6, name: 'Meta Platforms', exchange: 'NASDAQ', type: 'Stock', currency: 'USD' },
+  'BTCUSD': { basePrice: 95000, volatility: 1500, name: 'Bitcoin / USD', exchange: 'Crypto', type: 'Crypto', currency: 'USD' },
+  'ETHUSD': { basePrice: 2400, volatility: 80, name: 'Ethereum / USD', exchange: 'Crypto', type: 'Crypto', currency: 'USD' },
+  'EURUSD': { basePrice: 1.08, volatility: 0.005, name: 'EUR / USD', exchange: 'Forex', type: 'Forex', currency: 'USD' },
+};
+
+// Timeframe config: bars to generate, interval in minutes
+const TF_CONFIG = {
+  '1m':  { bars: 500, intervalMin: 1, useTimestamp: true },
+  '5m':  { bars: 500, intervalMin: 5, useTimestamp: true },
+  '15m': { bars: 400, intervalMin: 15, useTimestamp: true },
+  '30m': { bars: 350, intervalMin: 30, useTimestamp: true },
+  '1h':  { bars: 300, intervalMin: 60, useTimestamp: true },
+  '4h':  { bars: 250, intervalMin: 240, useTimestamp: true },
+  '1d':  { bars: 300, intervalMin: 1440, useTimestamp: false },
+  '1w':  { bars: 200, intervalMin: 10080, useTimestamp: false },
+  '1M':  { bars: 120, intervalMin: 43200, useTimestamp: false },
+};
+
+function generateCandlestickData(symbol = 'AAPL', days = 300, timeframe = '1d') {
+  const config = SYMBOL_CONFIG[symbol] || { basePrice: 100, volatility: 2 };
+  const tfConfig = TF_CONFIG[timeframe] || TF_CONFIG['1d'];
+  const bars = tfConfig.bars;
+  const intervalMin = tfConfig.intervalMin;
+  const useTimestamp = tfConfig.useTimestamp;
+  const isCrypto = symbol === 'BTCUSD' || symbol === 'ETHUSD';
+  const isForex = symbol === 'EURUSD';
+  const decimals = isForex ? 5 : 2;
+
+  let { basePrice, volatility } = config;
+
+  // Scale volatility by timeframe
+  const tfVolScale = Math.sqrt(intervalMin / 1440);
+  volatility = volatility * (tfVolScale || 1);
+
   const data = [];
   const volumeData = [];
-  let basePrice;
-  let volatility;
-
-  switch (symbol) {
-    case 'AAPL': basePrice = 180; volatility = 2.5; break;
-    case 'MSFT': basePrice = 380; volatility = 4; break;
-    case 'GOOGL': basePrice = 165; volatility = 3; break;
-    case 'AMZN': basePrice = 195; volatility = 3.5; break;
-    case 'TSLA': basePrice = 250; volatility = 8; break;
-    case 'NVDA': basePrice = 110; volatility = 5; break;
-    case 'META': basePrice = 590; volatility = 6; break;
-    case 'BTCUSD': basePrice = 95000; volatility = 1500; break;
-    case 'ETHUSD': basePrice = 2400; volatility = 80; break;
-    case 'EURUSD': basePrice = 1.08; volatility = 0.005; break;
-    default: basePrice = 100; volatility = 2; break;
-  }
-
   let currentPrice = basePrice;
-  const now = new Date();
-  const startDate = new Date(now);
-  startDate.setDate(startDate.getDate() - days);
 
-  // Create trend phases
+  const now = new Date();
+  // Calculate start time
+  const totalMinutes = bars * intervalMin;
+  const startTime = new Date(now.getTime() - totalMinutes * 60000);
+
+  // Trend phases
   const trendPhases = [];
-  let remainingDays = days;
-  while (remainingDays > 0) {
-    const phaseDays = Math.min(Math.floor(Math.random() * 40) + 15, remainingDays);
-    const direction = Math.random() > 0.45 ? 1 : -1;
-    const strength = (Math.random() * 0.3 + 0.1) * direction;
-    trendPhases.push({ days: phaseDays, strength });
-    remainingDays -= phaseDays;
+  let remaining = bars;
+  while (remaining > 0) {
+    const len = Math.min(Math.floor(Math.random() * 40) + 10, remaining);
+    const dir = Math.random() > 0.45 ? 1 : -1;
+    const str = (Math.random() * 0.3 + 0.1) * dir;
+    trendPhases.push({ len, str });
+    remaining -= len;
   }
 
-  let dayIndex = 0;
-  let phaseIndex = 0;
-  let phaseDayCount = 0;
+  let phaseIdx = 0, phaseCnt = 0;
 
-  for (let i = 0; i < days; i++) {
-    const date = new Date(startDate);
-    date.setDate(date.getDate() + i);
+  for (let i = 0; i < bars; i++) {
+    const barTime = new Date(startTime.getTime() + i * intervalMin * 60000);
 
-    // Skip weekends for stocks
-    if (symbol !== 'BTCUSD' && symbol !== 'ETHUSD') {
-      const dow = date.getDay();
+    // Skip weekends for non-crypto
+    if (!isCrypto && !useTimestamp) {
+      const dow = barTime.getDay();
       if (dow === 0 || dow === 6) continue;
     }
 
-    const phase = trendPhases[phaseIndex] || { days: 1, strength: 0 };
-    phaseDayCount++;
-    if (phaseDayCount >= phase.days && phaseIndex < trendPhases.length - 1) {
-      phaseIndex++;
-      phaseDayCount = 0;
+    const phase = trendPhases[phaseIdx] || { len: 1, str: 0 };
+    phaseCnt++;
+    if (phaseCnt >= phase.len && phaseIdx < trendPhases.length - 1) {
+      phaseIdx++; phaseCnt = 0;
     }
 
-    // Price movement with trend bias
-    const trendBias = phase.strength * volatility * 0.15;
+    const trendBias = phase.str * volatility * 0.15;
     const noise = (Math.random() - 0.5) * volatility * 2;
-    const momentum = data.length > 1 ? (data[data.length - 1].close - data[data.length - 1].open) * 0.2 : 0;
+    const momentum = data.length > 1 ? (data[data.length - 1].close - data[data.length - 1].open) * 0.15 : 0;
     const change = trendBias + noise + momentum;
 
     const open = currentPrice;
@@ -70,49 +91,43 @@ function generateCandlestickData(symbol = 'AAPL', days = 300) {
     const high = Math.max(open, close) + highExtra;
     const low = Math.min(open, close) - lowExtra;
 
-    // Volume - higher on trend days, lower on consolidation
-    const baseVolume = symbol === 'BTCUSD' ? 25000 : symbol === 'ETHUSD' ? 15000 : 45000000;
-    const volumeMultiplier = 0.5 + Math.random() * 1.5 + Math.abs(change) / volatility * 0.5;
-    const volume = Math.floor(baseVolume * volumeMultiplier);
+    const baseVolume = isCrypto ? 25000 : 45000000;
+    const volMult = 0.5 + Math.random() * 1.5 + Math.abs(change) / volatility * 0.5;
+    const volume = Math.floor(baseVolume * volMult * (tfVolScale || 1));
 
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const timeStr = `${year}-${month}-${day}`;
+    let time;
+    if (useTimestamp) {
+      time = Math.floor(barTime.getTime() / 1000);
+    } else {
+      const y = barTime.getFullYear();
+      const m = String(barTime.getMonth() + 1).padStart(2, '0');
+      const d = String(barTime.getDate()).padStart(2, '0');
+      time = `${y}-${m}-${d}`;
+    }
 
     data.push({
-      time: timeStr,
-      open: Number(open.toFixed(symbol === 'EURUSD' ? 5 : 2)),
-      high: Number(high.toFixed(symbol === 'EURUSD' ? 5 : 2)),
-      low: Number(low.toFixed(symbol === 'EURUSD' ? 5 : 2)),
-      close: Number(close.toFixed(symbol === 'EURUSD' ? 5 : 2)),
+      time,
+      open: Number(open.toFixed(decimals)),
+      high: Number(high.toFixed(decimals)),
+      low: Number(low.toFixed(decimals)),
+      close: Number(close.toFixed(decimals)),
     });
 
     volumeData.push({
-      time: timeStr,
+      time,
       value: volume,
       color: close >= open ? 'rgba(38,166,154,0.5)' : 'rgba(239,83,80,0.5)',
     });
 
     currentPrice = close;
-    dayIndex++;
   }
 
   return { candleData: data, volumeData };
 }
 
-export const symbolInfo = {
-  'AAPL': { name: 'Apple Inc', exchange: 'NASDAQ', type: 'Stock', currency: 'USD' },
-  'MSFT': { name: 'Microsoft Corp', exchange: 'NASDAQ', type: 'Stock', currency: 'USD' },
-  'GOOGL': { name: 'Alphabet Inc', exchange: 'NASDAQ', type: 'Stock', currency: 'USD' },
-  'AMZN': { name: 'Amazon.com Inc', exchange: 'NASDAQ', type: 'Stock', currency: 'USD' },
-  'TSLA': { name: 'Tesla Inc', exchange: 'NASDAQ', type: 'Stock', currency: 'USD' },
-  'NVDA': { name: 'NVIDIA Corp', exchange: 'NASDAQ', type: 'Stock', currency: 'USD' },
-  'META': { name: 'Meta Platforms', exchange: 'NASDAQ', type: 'Stock', currency: 'USD' },
-  'BTCUSD': { name: 'Bitcoin / USD', exchange: 'Crypto', type: 'Crypto', currency: 'USD' },
-  'ETHUSD': { name: 'Ethereum / USD', exchange: 'Crypto', type: 'Crypto', currency: 'USD' },
-  'EURUSD': { name: 'EUR / USD', exchange: 'Forex', type: 'Forex', currency: 'USD' },
-};
+export const symbolInfo = Object.fromEntries(
+  Object.entries(SYMBOL_CONFIG).map(([k, v]) => [k, { name: v.name, exchange: v.exchange, type: v.type, currency: v.currency }])
+);
 
 export const timeframes = [
   { label: '1m', value: '1m' },
@@ -139,59 +154,39 @@ export const indicators = [
   { name: 'PSAR', label: 'Parabolic SAR', category: 'Trend' },
 ];
 
-// Calculate SMA for overlay
 export function calculateSMA(data, period) {
-  const smaData = [];
+  const result = [];
   for (let i = period - 1; i < data.length; i++) {
     let sum = 0;
-    for (let j = 0; j < period; j++) {
-      sum += data[i - j].close;
-    }
-    smaData.push({
-      time: data[i].time,
-      value: Number((sum / period).toFixed(2)),
-    });
+    for (let j = 0; j < period; j++) sum += data[i - j].close;
+    result.push({ time: data[i].time, value: Number((sum / period).toFixed(2)) });
   }
-  return smaData;
+  return result;
 }
 
-// Calculate EMA
 export function calculateEMA(data, period) {
-  const emaData = [];
+  const result = [];
   const k = 2 / (period + 1);
-  let ema = data.slice(0, period).reduce((sum, d) => sum + d.close, 0) / period;
-
+  let ema = data.slice(0, period).reduce((s, d) => s + d.close, 0) / period;
   for (let i = period - 1; i < data.length; i++) {
-    if (i === period - 1) {
-      ema = data.slice(0, period).reduce((sum, d) => sum + d.close, 0) / period;
-    } else {
-      ema = data[i].close * k + ema * (1 - k);
-    }
-    emaData.push({
-      time: data[i].time,
-      value: Number(ema.toFixed(2)),
-    });
+    if (i === period - 1) ema = data.slice(0, period).reduce((s, d) => s + d.close, 0) / period;
+    else ema = data[i].close * k + ema * (1 - k);
+    result.push({ time: data[i].time, value: Number(ema.toFixed(2)) });
   }
-  return emaData;
+  return result;
 }
 
-// Calculate Bollinger Bands
 export function calculateBB(data, period = 20, stdDev = 2) {
-  const upper = [];
-  const middle = [];
-  const lower = [];
-
+  const upper = [], middle = [], lower = [];
   for (let i = period - 1; i < data.length; i++) {
     const slice = data.slice(i - period + 1, i + 1);
-    const mean = slice.reduce((sum, d) => sum + d.close, 0) / period;
-    const variance = slice.reduce((sum, d) => sum + Math.pow(d.close - mean, 2), 0) / period;
+    const mean = slice.reduce((s, d) => s + d.close, 0) / period;
+    const variance = slice.reduce((s, d) => s + Math.pow(d.close - mean, 2), 0) / period;
     const std = Math.sqrt(variance);
-
     middle.push({ time: data[i].time, value: Number(mean.toFixed(2)) });
     upper.push({ time: data[i].time, value: Number((mean + stdDev * std).toFixed(2)) });
     lower.push({ time: data[i].time, value: Number((mean - stdDev * std).toFixed(2)) });
   }
-
   return { upper, middle, lower };
 }
 

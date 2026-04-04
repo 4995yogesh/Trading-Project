@@ -5,6 +5,7 @@ import {
   Layout, Save, Eye, Play, ChevronRight, BarChart3
 } from 'lucide-react';
 import { symbolInfo, timeframes, indicators } from '../../data/chartData';
+import LayoutSelector from './LayoutSelector';
 
 // Candlestick icon SVG component
 const CandleIcon = ({ size = 16, className = '' }) => (
@@ -56,7 +57,9 @@ const HeikinAshiIcon = ({ size = 16, className = '' }) => (
 const ChartToolbar = ({
   symbol, onSymbolChange, timeframe, onTimeframeChange,
   chartType, onChartTypeChange, activeIndicators, onToggleIndicator,
-  priceData
+  priceData, onUndo, onRedo, onScreenshot, onSave, onFullscreen,
+  onSettings, onAlert, onReplay, onPublish,
+  activeLayout, onLayoutChange, showLayout, onToggleLayout
 }) => {
   const [showSymbolSearch, setShowSymbolSearch] = useState(false);
   const [showChartTypes, setShowChartTypes] = useState(false);
@@ -324,13 +327,13 @@ const ChartToolbar = ({
         <div className="w-px h-[22px] bg-[#2A2E39] mx-[2px]" />
 
         {/* Alert */}
-        <button className="flex items-center gap-1 px-2 h-[30px] text-[13px] text-[#787B86] hover:text-[#D1D4DC] hover:bg-[#2A2E3960] rounded-[4px] transition-colors">
+        <button onClick={onAlert} className="flex items-center gap-1 px-2 h-[30px] text-[13px] text-[#787B86] hover:text-[#D1D4DC] hover:bg-[#2A2E3960] rounded-[4px] transition-colors">
           <Bell size={14} />
           <span className="hidden md:inline">Alert</span>
         </button>
 
         {/* Replay */}
-        <button className="flex items-center gap-1 px-2 h-[30px] text-[13px] text-[#787B86] hover:text-[#D1D4DC] hover:bg-[#2A2E3960] rounded-[4px] transition-colors">
+        <button onClick={onReplay} className="flex items-center gap-1 px-2 h-[30px] text-[13px] text-[#787B86] hover:text-[#D1D4DC] hover:bg-[#2A2E3960] rounded-[4px] transition-colors">
           <Play size={14} />
           <span className="hidden md:inline">Replay</span>
         </button>
@@ -339,38 +342,43 @@ const ChartToolbar = ({
         <div className="flex-1" />
 
         {/* Right side actions */}
-        <button className="w-[30px] h-[30px] flex items-center justify-center text-[#787B86] hover:text-[#D1D4DC] hover:bg-[#2A2E3960] rounded-[4px] transition-colors" title="Undo">
+        <button onClick={onUndo} className="w-[30px] h-[30px] flex items-center justify-center text-[#787B86] hover:text-[#D1D4DC] hover:bg-[#2A2E3960] rounded-[4px] transition-colors" title="Undo (Ctrl+Z)">
           <Undo2 size={14} />
         </button>
-        <button className="w-[30px] h-[30px] flex items-center justify-center text-[#787B86] hover:text-[#D1D4DC] hover:bg-[#2A2E3960] rounded-[4px] transition-colors" title="Redo">
+        <button onClick={onRedo} className="w-[30px] h-[30px] flex items-center justify-center text-[#787B86] hover:text-[#D1D4DC] hover:bg-[#2A2E3960] rounded-[4px] transition-colors" title="Redo (Ctrl+Y)">
           <Redo2 size={14} />
         </button>
 
         <div className="w-px h-[22px] bg-[#2A2E39] mx-[2px]" />
 
-        <button className="w-[30px] h-[30px] flex items-center justify-center text-[#787B86] hover:text-[#D1D4DC] hover:bg-[#2A2E3960] rounded-[4px] transition-colors" title="Layout">
-          <Layout size={14} />
-        </button>
-        <button className="w-[30px] h-[30px] flex items-center justify-center text-[#787B86] hover:text-[#D1D4DC] hover:bg-[#2A2E3960] rounded-[4px] transition-colors" title="Screenshot">
+        <div className="relative">
+          <button onClick={onToggleLayout} className={`w-[30px] h-[30px] flex items-center justify-center rounded-[4px] transition-colors ${showLayout ? 'text-[#2962FF] bg-[#2962FF15]' : 'text-[#787B86] hover:text-[#D1D4DC] hover:bg-[#2A2E3960]'}`} title="Layout">
+            <Layout size={14} />
+          </button>
+          {showLayout && (
+            <LayoutSelector activeLayout={activeLayout} onLayoutChange={onLayoutChange} isOpen={showLayout} onToggle={onToggleLayout} />
+          )}
+        </div>
+        <button onClick={onScreenshot} className="w-[30px] h-[30px] flex items-center justify-center text-[#787B86] hover:text-[#D1D4DC] hover:bg-[#2A2E3960] rounded-[4px] transition-colors" title="Screenshot">
           <Camera size={14} />
         </button>
-        <button className="w-[30px] h-[30px] flex items-center justify-center text-[#787B86] hover:text-[#D1D4DC] hover:bg-[#2A2E3960] rounded-[4px] transition-colors" title="Settings">
+        <button onClick={onSettings} className="w-[30px] h-[30px] flex items-center justify-center text-[#787B86] hover:text-[#D1D4DC] hover:bg-[#2A2E3960] rounded-[4px] transition-colors" title="Settings">
           <Settings size={14} />
         </button>
-        <button className="w-[30px] h-[30px] flex items-center justify-center text-[#787B86] hover:text-[#D1D4DC] hover:bg-[#2A2E3960] rounded-[4px] transition-colors" title="Fullscreen">
+        <button onClick={onFullscreen} className="w-[30px] h-[30px] flex items-center justify-center text-[#787B86] hover:text-[#D1D4DC] hover:bg-[#2A2E3960] rounded-[4px] transition-colors" title="Fullscreen">
           <Maximize2 size={14} />
         </button>
 
         <div className="w-px h-[22px] bg-[#2A2E39] mx-[2px]" />
 
         {/* Save */}
-        <button className="flex items-center gap-1 px-2.5 h-[30px] text-[13px] text-[#787B86] hover:text-[#D1D4DC] hover:bg-[#2A2E3960] rounded-[4px] transition-colors">
+        <button onClick={onSave} className="flex items-center gap-1 px-2.5 h-[30px] text-[13px] text-[#787B86] hover:text-[#D1D4DC] hover:bg-[#2A2E3960] rounded-[4px] transition-colors">
           <Save size={14} />
           <span className="hidden lg:inline">Save</span>
         </button>
 
         {/* Publish */}
-        <button className="flex items-center gap-1 px-3 h-[28px] text-[12px] font-medium text-white bg-[#2962FF] hover:bg-[#1E53E5] rounded-[4px] transition-colors ml-1">
+        <button onClick={onPublish} className="flex items-center gap-1 px-3 h-[28px] text-[12px] font-medium text-white bg-[#2962FF] hover:bg-[#1E53E5] rounded-[4px] transition-colors ml-1">
           Publish
         </button>
       </div>

@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useCallback, useState, forwardRef, useImperat
 import { createChart, CandlestickSeries, LineSeries, HistogramSeries, AreaSeries, BarSeries } from 'lightweight-charts';
 import generateCandlestickData, { calculateSMA, calculateEMA, calculateBB } from '../../data/chartData';
 
-const ChartWidget = forwardRef(({ symbol, timeframe, chartType, activeIndicators, onPriceUpdate, onChartReady }, ref) => {
+const ChartWidget = forwardRef(({ symbol, timeframe, chartType, activeIndicators, onPriceUpdate, logScale, chartSettings }, ref) => {
   const chartContainerRef = useRef(null);
   const chartRef = useRef(null);
   const seriesRef = useRef(null);
@@ -10,49 +10,63 @@ const ChartWidget = forwardRef(({ symbol, timeframe, chartType, activeIndicators
   const indicatorSeriesRef = useRef([]);
   const [chartData, setChartData] = useState(null);
 
-  // Expose chart and series via ref
   useImperativeHandle(ref, () => ({
     getChart: () => chartRef.current,
     getSeries: () => seriesRef.current,
     getContainer: () => chartContainerRef.current,
+    setVisibleRange: (range) => {
+      if (chartRef.current && chartData) {
+        try {
+          const ts = chartRef.current.timeScale();
+          const len = chartData.candleData.length;
+          if (range === 'all') { ts.fitContent(); return; }
+          const barsMap = { '1D': 1, '5D': 5, '1M': 22, '3M': 66, '6M': 132, 'YTD': 180, '1Y': 252, '5Y': 1260 };
+          const barsToShow = barsMap[range] || len;
+          const from = Math.max(0, len - barsToShow);
+          ts.setVisibleRange({ from: chartData.candleData[from].time, to: chartData.candleData[len - 1].time });
+        } catch (e) { console.warn('setVisibleRange error', e); }
+      }
+    },
+    fitContent: () => { chartRef.current?.timeScale().fitContent(); },
   }));
 
+  // Generate data when symbol or timeframe changes
   useEffect(() => {
-    const data = generateCandlestickData(symbol, 300);
+    const data = generateCandlestickData(symbol, 300, timeframe);
     setChartData(data);
-  }, [symbol]);
+  }, [symbol, timeframe]);
 
   const initChart = useCallback(() => {
     if (!chartContainerRef.current || !chartData) return;
-
-    if (chartRef.current) {
-      chartRef.current.remove();
-      chartRef.current = null;
-    }
+    if (chartRef.current) { chartRef.current.remove(); chartRef.current = null; }
 
     const container = chartContainerRef.current;
+    const bg = chartSettings?.background || '#131722';
+    const gridColor = chartSettings?.showGrid !== false ? (chartSettings?.gridColor || '#1E222D') : 'transparent';
+    const crosshairMode = chartSettings?.crosshairMode === 'magnet' ? 1 : 0;
+
     const chart = createChart(container, {
       width: container.clientWidth,
       height: container.clientHeight,
       localization: { locale: 'en-US' },
       layout: {
-        background: { type: 'solid', color: '#131722' },
+        background: { type: 'solid', color: bg },
         textColor: '#787B86',
         fontSize: 11,
         fontFamily: 'Inter, -apple-system, sans-serif',
       },
       grid: {
-        vertLines: { color: '#1E222D', style: 1 },
-        horzLines: { color: '#1E222D', style: 1 },
+        vertLines: { color: gridColor, style: 1 },
+        horzLines: { color: gridColor, style: 1 },
       },
       crosshair: {
-        mode: 0,
+        mode: crosshairMode,
         vertLine: { width: 1, color: '#787B8650', style: 2, labelBackgroundColor: '#2962FF' },
         horzLine: { width: 1, color: '#787B8650', style: 2, labelBackgroundColor: '#2962FF' },
       },
       timeScale: {
         borderColor: '#2A2E39',
-        timeVisible: true,
+        timeVisible: ['1m', '5m', '15m', '30m', '1h', '4h'].includes(timeframe),
         secondsVisible: false,
         rightOffset: 12,
         barSpacing: 8,
@@ -61,6 +75,7 @@ const ChartWidget = forwardRef(({ symbol, timeframe, chartType, activeIndicators
       rightPriceScale: {
         borderColor: '#2A2E39',
         scaleMargins: { top: 0.1, bottom: 0.25 },
+        mode: logScale ? 1 : 0, // 0=Normal, 1=Logarithmic
       },
       handleScroll: { vertTouchDrag: false },
     });
@@ -68,6 +83,9 @@ const ChartWidget = forwardRef(({ symbol, timeframe, chartType, activeIndicators
     chartRef.current = chart;
 
     let mainSeries;
+    const upColor = chartSettings?.upColor || '#26A69A';
+    const downColor = chartSettings?.downColor || '#EF5350';
+
     if (chartType === 'line') {
       mainSeries = chart.addSeries(LineSeries, { color: '#2962FF', lineWidth: 2, crosshairMarkerVisible: true, crosshairMarkerRadius: 4 });
       mainSeries.setData(chartData.candleData.map(d => ({ time: d.time, value: d.close })));
@@ -75,14 +93,10 @@ const ChartWidget = forwardRef(({ symbol, timeframe, chartType, activeIndicators
       mainSeries = chart.addSeries(AreaSeries, { topColor: 'rgba(41,98,255,0.3)', bottomColor: 'rgba(41,98,255,0.02)', lineColor: '#2962FF', lineWidth: 2 });
       mainSeries.setData(chartData.candleData.map(d => ({ time: d.time, value: d.close })));
     } else if (chartType === 'bar') {
-      mainSeries = chart.addSeries(BarSeries, { upColor: '#26A69A', downColor: '#EF5350' });
+      mainSeries = chart.addSeries(BarSeries, { upColor, downColor });
       mainSeries.setData(chartData.candleData);
     } else {
-      mainSeries = chart.addSeries(CandlestickSeries, {
-        upColor: '#26A69A', downColor: '#EF5350',
-        borderUpColor: '#26A69A', borderDownColor: '#EF5350',
-        wickUpColor: '#26A69A', wickDownColor: '#EF5350',
-      });
+      mainSeries = chart.addSeries(CandlestickSeries, { upColor, downColor, borderUpColor: upColor, borderDownColor: downColor, wickUpColor: upColor, wickDownColor: downColor });
       mainSeries.setData(chartData.candleData);
     }
     seriesRef.current = mainSeries;
@@ -121,36 +135,26 @@ const ChartWidget = forwardRef(({ symbol, timeframe, chartType, activeIndicators
         if (chartData.candleData.length > 0) onPriceUpdate?.(chartData.candleData[chartData.candleData.length - 1]);
         return;
       }
-      const data = param.seriesData?.get(mainSeries);
-      if (data) onPriceUpdate?.(data);
+      const d = param.seriesData?.get(mainSeries);
+      if (d) onPriceUpdate?.(d);
     });
 
     chart.timeScale().fitContent();
     if (chartData.candleData.length > 0) onPriceUpdate?.(chartData.candleData[chartData.candleData.length - 1]);
-
-    // Notify parent chart is ready
-    onChartReady?.();
-  }, [chartData, chartType, activeIndicators, onPriceUpdate, onChartReady]);
+  }, [chartData, chartType, activeIndicators, onPriceUpdate, logScale, chartSettings, timeframe]);
 
   useEffect(() => { initChart(); }, [initChart]);
 
   useEffect(() => {
     const handleResize = () => {
       if (chartRef.current && chartContainerRef.current) {
-        chartRef.current.applyOptions({
-          width: chartContainerRef.current.clientWidth,
-          height: chartContainerRef.current.clientHeight,
-        });
+        chartRef.current.applyOptions({ width: chartContainerRef.current.clientWidth, height: chartContainerRef.current.clientHeight });
       }
     };
     window.addEventListener('resize', handleResize);
     const ro = new ResizeObserver(handleResize);
     if (chartContainerRef.current) ro.observe(chartContainerRef.current);
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      ro.disconnect();
-      if (chartRef.current) { chartRef.current.remove(); chartRef.current = null; }
-    };
+    return () => { window.removeEventListener('resize', handleResize); ro.disconnect(); if (chartRef.current) { chartRef.current.remove(); chartRef.current = null; } };
   }, []);
 
   return <div ref={chartContainerRef} className="w-full h-full" />;

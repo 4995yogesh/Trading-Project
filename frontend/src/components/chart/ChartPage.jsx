@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { List, Clock, ChevronDown, Plus, MoreHorizontal, Grid3X3, Pencil, ExternalLink } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import ChartWidget from './ChartWidget';
 import ChartToolbar from './ChartToolbar';
 import DrawingTools from './DrawingTools';
@@ -238,7 +239,7 @@ const ChartPage = () => {
     const isMain = idx === 0;
     const cRef = isMain ? chartWidgetRef : null;
     return (
-      <div key={`pane-${idx}-${pane.symbol}`} className={`flex-1 relative min-w-0 min-h-0 border border-[#2A2E39] ${activePaneIdx === idx && activeLayout !== '1' ? 'ring-1 ring-[#2962FF40]' : ''}`}
+      <div key={`pane-${idx}-${pane.symbol}`} className={`h-full w-full relative border border-[#2A2E39] ${activePaneIdx === idx && activeLayout !== '1' ? 'ring-1 ring-[#2962FF40]' : ''}`}
         onClick={() => setActivePaneIdx(idx)}>
         <ChartWidget
           ref={cRef}
@@ -268,40 +269,64 @@ const ChartPage = () => {
     );
   };
 
+  // Resize handle component
+  const ResizeHandle = ({ direction = 'horizontal' }) => (
+    <PanelResizeHandle className={`group relative flex items-center justify-center ${
+      direction === 'horizontal' ? 'w-[5px] cursor-col-resize' : 'h-[5px] cursor-row-resize'
+    } bg-[#2A2E39] hover:bg-[#2962FF60] active:bg-[#2962FF] transition-colors`}>
+      <div className={`${
+        direction === 'horizontal' ? 'w-[3px] h-8' : 'h-[3px] w-8'
+      } rounded-full bg-[#363A45] group-hover:bg-[#2962FF] transition-colors`} />
+    </PanelResizeHandle>
+  );
+
   const getLayoutCharts = () => {
     switch (activeLayout) {
       case '2h': return (
-        <div className="flex flex-1 overflow-hidden">
-          {renderChart(0)}
-          {renderChart(1)}
-        </div>
+        <PanelGroup direction="horizontal" className="flex-1">
+          <Panel defaultSize={50} minSize={20}>{renderChart(0)}</Panel>
+          <ResizeHandle direction="horizontal" />
+          <Panel defaultSize={50} minSize={20}>{renderChart(1)}</Panel>
+        </PanelGroup>
       );
       case '2v': return (
-        <div className="flex flex-col flex-1 overflow-hidden">
-          {renderChart(0)}
-          {renderChart(1)}
-        </div>
+        <PanelGroup direction="vertical" className="flex-1">
+          <Panel defaultSize={50} minSize={20}>{renderChart(0)}</Panel>
+          <ResizeHandle direction="vertical" />
+          <Panel defaultSize={50} minSize={20}>{renderChart(1)}</Panel>
+        </PanelGroup>
       );
       case '4': return (
-        <div className="flex flex-col flex-1 overflow-hidden">
-          <div className="flex flex-1 min-h-0">
-            {renderChart(0)}
-            {renderChart(1)}
-          </div>
-          <div className="flex flex-1 min-h-0">
-            {renderChart(2)}
-            {renderChart(3)}
-          </div>
-        </div>
+        <PanelGroup direction="vertical" className="flex-1">
+          <Panel defaultSize={50} minSize={15}>
+            <PanelGroup direction="horizontal">
+              <Panel defaultSize={50} minSize={15}>{renderChart(0)}</Panel>
+              <ResizeHandle direction="horizontal" />
+              <Panel defaultSize={50} minSize={15}>{renderChart(1)}</Panel>
+            </PanelGroup>
+          </Panel>
+          <ResizeHandle direction="vertical" />
+          <Panel defaultSize={50} minSize={15}>
+            <PanelGroup direction="horizontal">
+              <Panel defaultSize={50} minSize={15}>{renderChart(2)}</Panel>
+              <ResizeHandle direction="horizontal" />
+              <Panel defaultSize={50} minSize={15}>{renderChart(3)}</Panel>
+            </PanelGroup>
+          </Panel>
+        </PanelGroup>
       );
       case '3r': return (
-        <div className="flex flex-1 overflow-hidden">
-          <div className="flex-[2] min-w-0">{renderChart(0)}</div>
-          <div className="flex-1 flex flex-col min-w-0">
-            {renderChart(1)}
-            {renderChart(2)}
-          </div>
-        </div>
+        <PanelGroup direction="horizontal" className="flex-1">
+          <Panel defaultSize={65} minSize={25}>{renderChart(0)}</Panel>
+          <ResizeHandle direction="horizontal" />
+          <Panel defaultSize={35} minSize={15}>
+            <PanelGroup direction="vertical">
+              <Panel defaultSize={50} minSize={20}>{renderChart(1)}</Panel>
+              <ResizeHandle direction="vertical" />
+              <Panel defaultSize={50} minSize={20}>{renderChart(2)}</Panel>
+            </PanelGroup>
+          </Panel>
+        </PanelGroup>
       );
       default: return (
         <div className="flex-1 relative min-w-0">

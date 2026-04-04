@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
+import ReactDOM from 'react-dom';
 import { X, CandlestickChart, BarChart3, LineChart, AlignLeft, Clock, Scaling, Palette, TrendingUp, Bell, CalendarDays } from 'lucide-react';
 
 const tabs = [
@@ -13,26 +14,46 @@ const tabs = [
 
 const ColorSwatch = ({ color, onChange, label }) => {
   const [open, setOpen] = useState(false);
+  const btnRef = useRef(null);
+  const [pos, setPos] = useState({ top: 0, left: 0 });
   const presets = ['#26A69A', '#4CAF50', '#00E676', '#00BCD4', '#2196F3', '#2962FF',
     '#EF5350', '#F44336', '#FF5252', '#FF7043', '#E91E63', '#9C27B0',
     '#FF9800', '#FFC107', '#FFEB3B', '#8BC34A', '#607D8B', '#795548',
     '#FFFFFF', '#D1D4DC', '#787B86', '#363A45', '#1E222D', '#131722'];
 
+  const handleOpen = () => {
+    if (btnRef.current) {
+      const rect = btnRef.current.getBoundingClientRect();
+      // Position dropdown below button, but shift left if near right edge
+      let left = rect.left;
+      if (left + 168 > window.innerWidth) left = window.innerWidth - 178;
+      let top = rect.bottom + 4;
+      if (top + 120 > window.innerHeight) top = rect.top - 124;
+      setPos({ top, left });
+    }
+    setOpen(!open);
+  };
+
   return (
     <div className="relative">
-      <button onClick={() => setOpen(!open)}
+      <button ref={btnRef} onClick={handleOpen}
         className="w-[28px] h-[28px] rounded border border-[#363A45] hover:border-[#787B86] transition-colors"
         style={{ backgroundColor: color }} />
-      {open && (
-        <div className="absolute top-full left-0 mt-1 z-50 bg-[#1E222D] border border-[#363A45] rounded-lg shadow-2xl p-2 w-[180px]">
-          <div className="grid grid-cols-6 gap-1">
-            {presets.map(c => (
-              <button key={c} onClick={() => { onChange(c); setOpen(false); }}
-                className={`w-6 h-6 rounded-sm border transition-colors ${color === c ? 'border-white' : 'border-transparent hover:border-[#787B86]'}`}
-                style={{ backgroundColor: c }} />
-            ))}
+      {open && ReactDOM.createPortal(
+        <>
+          <div className="fixed inset-0 z-[200]" onClick={() => setOpen(false)} />
+          <div className="fixed z-[201] bg-[#1E222D] border border-[#363A45] rounded-lg shadow-2xl p-2.5"
+            style={{ top: pos.top, left: pos.left, width: 168 }}>
+            <div className="grid grid-cols-6 gap-1.5">
+              {presets.map(c => (
+                <button key={c} onClick={() => { onChange(c); setOpen(false); }}
+                  className={`w-[22px] h-[22px] rounded-sm border-2 transition-colors ${color === c ? 'border-white scale-110' : 'border-transparent hover:border-[#787B86]'}`}
+                  style={{ backgroundColor: c }} />
+              ))}
+            </div>
           </div>
-        </div>
+        </>,
+        document.body
       )}
     </div>
   );
